@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة المكتبة الشاملة التفاعلية</title>
+    <!-- خطوط عربية تراثية وعصرية -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --------------------------------------------------
+           1. المتغيرات والأنماط العامة (CSS Variables & Resets)
+        -------------------------------------------------- */
+        :root {
+            --bg-color: #f7f6f2;
+            --card-bg: #ffffff;
+            --text-main: #2c2c2c;
+            --text-muted: #666666;
+            --primary: #1b3b2b;
+            --primary-hover: #2a5a42;
+            --accent: #c5a059;
+            --border-color: #e2ded4;
+            --reader-bg: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* الثيم الليلي */
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --primary: #2d5a42;
+            --primary-hover: #3d7a5b;
+            --accent: #d4af37;
+            --border-color: #333333;
+            --reader-bg: #181818;
+            --shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            direction: rtl;
+            line-height: 1.6;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --------------------------------------------------
+           2. الهيدر والشريط العلوي (Navbar)
+        -------------------------------------------------- */
+        .navbar {
+            background-color: var(--primary);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .logo h1 { font-size: 1.4rem; font-weight: 700; }
+
+        .nav-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 6px;
+        }
+
+        .search-bar input {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 250px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* --------------------------------------------------
+           3. التخطيط الرئيسي (Main Layout)
+        -------------------------------------------------- */
+        .layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 15px;
+            gap: 20px;
+        }
+
+        /* القائمة الجانبية والمجلدات */
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            height: fit-content;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .folder-list { list-style: none; }
+        .folder-item { margin-bottom: 8px; }
+
+        .folder-btn {
+            width: 100%;
+            text-align: right;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .folder-btn:hover, .folder-item.active .folder-btn {
+            background-color: rgba(197, 160, 89, 0.15);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .content-area { flex: 1; }
+
+        /* --------------------------------------------------
+           4. شبكة الكروت والكتب (Book Grid)
+        -------------------------------------------------- */
+        .grid-header {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .book-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+
+        .book-details {
+            padding: 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-category {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .book-title {
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .book-author {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .btn-read {
+            flex: 1;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .btn-external {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-external:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --------------------------------------------------
+           5. منطقة قراءة الكتاب (Interactive Reader)
+        -------------------------------------------------- */
+        .reader-view {
+            display: none; /* يتم تفعيله عند فتح كتاب */
+            background: var(--reader-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .reader-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .reader-controls {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .reader-controls button {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .reader-controls button:hover { background: var(--border-color); }
+
+        .reader-body {
+            font-family: 'Amiri', serif;
+            font-size: 1.4rem;
+            line-height: 2.3;
+            text-align: justify;
+            min-height: 350px;
+        }
+
+        .reader-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 850px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .navbar { flex-direction: column; gap: 10px; text-align: center; }
+            .search-bar input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الهيدر -->
+    <header class="navbar">
+        <div class="logo" onclick="showCatalog()">
+            <span style="font-size: 1.6rem;">📚</span>
+            <h1>المكتبة الشاملة الرقمية</h1>
+        </div>
+        <div class="nav-controls">
+            <div class="search-bar">
+                <input type="text" id="searchInput" onkeyup="filterBooks()" placeholder="ابحث باسم الكتاب أو اسم المؤلف...">
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
+        </div>
+    </header>
+
+    <!-- الجسم الرئيسي -->
+    <div class="layout">
+
+        <!-- المجلدات والتصنيفات الجانبية -->
+        <aside class="sidebar">
+            <h3 class="sidebar-title">الأقسام والمجلدات</h3>
+            <ul class="folder-list">
+                <li class="folder-item active">
+                    <button class="folder-btn" onclick="filterCategory('all', this)">📂 جميع الكتب</button>
+                </li>
+                <li class="folder-item">
+                    <button class="folder-btn" onclick="filterCategory(' حديث', this)">📁 كتب الحديث وعلومه</button>
+                </li>
+                <li class="folder-item">
+                    <button class="folder-btn" onclick="filterCategory('عقيدة', this)">📁 كتب العقيدة</button>
+                </li>
+                <li class="folder-item">
+                    <button class="folder-btn" onclick="filterCategory('فقه', this)">📁 كتب الفقه الإسلامي</button>
+                </li>
+                <li class="folder-item">
+                    <button class="folder-btn" onclick="filterCategory('تاريخ', this)">📁 السيرة والتاريخ</button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- منطقة العرض الرئيسية -->
+        <main class="content-area">
+
+            <!-- 1. شبكة الكروت (Catalog View) -->
+            <div id="catalogView">
+                <div class="grid-header">
+                    <h2 id="categoryTitle" style="font-size: 1.3rem;">جميع الكتب المتاحة</h2>
+                    <span id="bookCount" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                </div>
+                <div class="books-grid" id="booksContainer">
+                    <!-- يتم ضخ الكتب هنا عبر JavaScript -->
+                </div>
+            </div>
+
+            <!-- 2. القارئ التفاعلي (Reader View) -->
+            <div id="readerView" class="reader-view">
+                <div class="reader-header">
+                    <div>
+                        <button class="btn" onclick="showCatalog()" style="margin-bottom: 8px;">← العودة للكتالوج</button>
+                        <h2 id="readingTitle" style="color: var(--primary);">--</h2>
+                        <span id="readingAuthor" style="color: var(--text-muted); font-size: 0.9rem;">--</span>
+                    </div>
+                    <div class="reader-controls">
+                        <button onclick="changeFontSize(1)" title="تكبير الخط">أ+</button>
+                        <button onclick="changeFontSize(-1)" title="تصغير الخط">أ-</button>
+                    </div>
+                </div>
+
+                <div class="reader-body" id="readerContent">
+                    <!-- النص يعرض هنا -->
+                </div>
+
+                <div class="reader-pagination">
+                    <button class="btn" onclick="changePage(-1)">الصفحة السابقة</button>
+                    <span id="pageTracker" style="font-weight: bold;">صفحة 1</span>
+                    <button class="btn" onclick="changePage(1)">الصفحة التالية</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- --------------------------------------------------
+       6. السكريبت البرمجي والبيانات (JavaScript)
+    -------------------------------------------------- -->
+    <script>
+        // قواعد البيانات المحلية للكتب (يمكنك إضافة أو تعديل الروابط والصور)
+        const booksData = [
+            {
+                id: 1,
+                title: "صحيح البخاري",
+                author: "الإمام محمد بن إسماعيل البخاري",
+                category: "حديث",
+                cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
+                externalUrl: "https://shamela.ws/book/1681", // رابط المكتبة الشاملة الخارجية
+                pages: [
+                    "باب كَيْفَ كَانَ بَدْءُ الْوَحْيِ إِلَى رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ<br><br>حَدَّثَنَا حُمَيْدُ بْنُ الرَّبِيعِ، قَالَ: حَدَّثَنَا زُهَيْرُ بْنُ مُعَاوِيَةَ، عَنْ يَحْيَى بْنِ سَعِيدٍ، عَنْ مُحَمَّدِ بْنِ إِبْرَاهِيمَ التَّيْمِيِّ، عَنْ عَلْقَمَةَ بْنِ وَقَّاصٍ اللَّيْثِيِّ، قَالَ: سَمِعْتُ عُمَرَ بْنَ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ عَلَى الْمِنْبَرِ قَالَ: سَمِعْتُ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ يَقُولُ: <b>«إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى...»</b>",
+                    "باب الإِيمَانُ وَقَوْلُ النَّبِيِّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ: «بُنِيَ الإِسْلاَمُ عَلَى خَمْسٍ»<br><br>وَهُوَ قَوْلٌ وَفِعْلٌ، وَيَزِيدُ وَيَنْقُصُ. قَالَ اللَّهُ تَعَالَى: ﴿لِيَزْدَادُوا إِيمَانًا مَعَ إِيمَانِهِمْ﴾."
+                ]
+            },
+            {
+                id: 2,
+                title: "العقيدة الواسطية",
+                author: "شيخ الإسلام ابن تيمية",
+                category: "عقيدة",
+                cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&q=80",
+                externalUrl: "https://shamela.ws/book/21544",
+                pages: [
+                    "أما بعد: فهذا اعتقاد الفرقة الناجية المنصورة إلى قيام الساعة: أهل السنة والجماعة.<br><br>وهو الإيمان بالله، وملائكته، وكتبه، ورسله، والبعث بعد الموت، والإيمان بالقدر خيرة وشره."
+                ]
+            },
+            {
+                id: 3,
+                title: "البداية والنهاية",
+                author: "الحافظ ابن كثير",
+                category: "تاريخ",
+                cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
+                externalUrl: "https://archive.org", // رابط منصة أرشيف
+                pages: [
+                    "الحمد لله الأول الآخر، الباطن الظاهر، الذي هو بكل شيء عليم.<br><br>نبتدئ بعون الله بذكر خلق السماوات والأرض وما فيهما، وتاريخ الأمم الغابرة."
+                ]
+            },
+            {
+                id: 4,
+                title: "بداية المجتهد ونهاية المقتصد",
+                author: "ابن رشد الحفيد",
+                category: "فقه",
+                cover: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&q=80",
+                externalUrl: "https://www.noor-book.com", // رابط مكتبة نور
+                pages: [
+                    "كتاب الطهارة: أجمع العلماء على أن الطهارة المطلوبة للصلوات نوعان: طهارة حدث، وطهارة خبث."
+                ]
+            }
+        ];
+
+        // حالة التطبيق (State)
+        let currentBook = null;
+        let currentPageIndex = 0;
+        let currentFontSize = 1.4;
+
+        // 1. عرض وتوليد بطاقات الكتب
+        function renderBooks(books) {
+            const container = document.getElementById('booksContainer');
+            container.innerHTML = '';
+
+            document.getElementById('bookCount').textContent = `(عدد الكتب: ${books.length})`;
+
+            books.forEach(book => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+                card.innerHTML = `
+                    <img src="${book.cover}" alt="${book.title}" class="book-cover">
+                    <div class="book-details">
+                        <span class="book-category">${book.category}</span>
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">${book.author}</p>
+                        <div class="card-actions">
+                            <button class="btn-read" onclick="openReader(${book.id})">قراءة</button>
+                            <a href="${book.externalUrl}" target="_blank" class="btn-external" title="فتح المصدر الخارجي">🔗 المنصة</a>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 2. تصفية الكتب حسب القائمة الجانبية (الأقسام)
+        function filterCategory(category, element) {
+            document.querySelectorAll('.folder-item').forEach(el => el.classList.remove('active'));
+            element.parentElement.classList.add('active');
+
+            if(category === 'all') {
+                document.getElementById('categoryTitle').textContent = "جميع الكتب المتاحة";
+                renderBooks(booksData);
+            } else {
+                document.getElementById('categoryTitle').textContent = "قسم " + category;
+                const filtered = booksData.filter(b => b.category.trim() === category.trim());
+                renderBooks(filtered);
+            }
+        }
+
+        // 3. البحث السريع
+        function filterBooks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = booksData.filter(b => 
+                b.title.toLowerCase().includes(query) || 
+                b.author.toLowerCase().includes(query)
+            );
+            renderBooks(filtered);
+        }
+
+        // 4. فتح واجهة القراءة
+        function openReader(bookId) {
+            currentBook = booksData.find(b => b.id === bookId);
+            currentPageIndex = 0;
+
+            document.getElementById('readingTitle').textContent = currentBook.title;
+            document.getElementById('readingAuthor').textContent = currentBook.author;
+            
+            document.getElementById('catalogView').style.display = 'none';
+            document.getElementById('readerView').style.display = 'block';
+
+            updatePageContent();
+        }
+
+        // 5. تحديث الصفحة في القارئ
+        function updatePageContent() {
+            const contentDiv = document.getElementById('readerContent');
+            contentDiv.innerHTML = currentBook.pages[currentPageIndex];
+            document.getElementById('pageTracker').textContent = `صفحة ${currentPageIndex + 1} من ${currentBook.pages.length}`;
+        }
+
+        function changePage(direction) {
+            if (currentPageIndex + direction >= 0 && currentPageIndex + direction < currentBook.pages.length) {
+                currentPageIndex += direction;
+                updatePageContent();
+            }
+        }
+
+        function showCatalog() {
+            document.getElementById('readerView').style.display = 'none';
+            document.getElementById('catalogView').style.display = 'block';
+        }
+
+        // 6. التحكم بالخط
+        function changeFontSize(delta) {
+            currentFontSize += delta * 0.1;
+            document.getElementById('readerContent').style.fontSize = `${currentFontSize}rem`;
+        }
+
+        // 7. تبديل الوضع الليلي
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // التشغيل الأول لتوليد البيانات
+        renderBooks(booksData);
+    </script>
+</body>
+</html>
